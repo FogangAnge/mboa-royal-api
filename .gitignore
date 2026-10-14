@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+media/
+venv/
+.venv/
+.idea/
+.fetch-client/
