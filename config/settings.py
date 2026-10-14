@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rest_framework",
     "corsheaders",
-
+    "comptes",
 ]
+AUTH_USER_MODEL = "comptes.Utilisateur"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
