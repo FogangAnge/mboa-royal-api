@@ -1,0 +1,183 @@
+{
+  "info": {
+    "_postman_id": "3cae2c84-20e2-4b8c-86c4-6b3a2a0c3c3e",
+    "name": "Mboa Royal API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52756465",
+    "_collection_link": "https://go.postman.co/collection/52756465-3cae2c84-20e2-4b8c-86c4-6b3a2a0c3c3e?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Inscription",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"telephone\": \"+237 677 12 34 56\",\r\n    \"nom\": \"Client Test\",\r\n    \"langue\": \"fr\",\r\n    \"password\": \"Koki#Royal2026\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/inscription/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "inscription",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Connection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Connexion réussie (200)\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 200) {\r",
+                  "    const data = pm.response.json();\r",
+                  "    pm.environment.set(\"access_token\", data.access);\r",
+                  "    pm.environment.set(\"refresh_token\", data.refresh);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"telephone\": \"677123456\",\r\n    \"password\": \"Koki#Royal2026\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/connexion/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "connexion",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Moi",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Rafraîchir le jeton",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Jeton rafraîchi (200)\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 200) {\r",
+                  "    pm.environment.set(\"access_token\", pm.response.json().access);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refresh\": \"{{refresh_token}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/token/rafraichir/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "token",
+                "rafraichir",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
