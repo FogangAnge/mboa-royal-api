@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "comptes",
     "restaurants",
     "zones",
+    "menu"
 ]
 AUTH_USER_MODEL = "comptes.Utilisateur"
 
