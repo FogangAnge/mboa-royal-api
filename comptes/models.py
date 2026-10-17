@@ -55,6 +55,11 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
         default=False,
         help_text="Un client bloqué ne peut plus passer de commande.",
     )
+    disponible = models.BooleanField(
+        "disponible pour une course",
+        default=False,
+        help_text="Pour les livreurs : indique s'ils peuvent prendre une course maintenant.",
+    )
     is_active = models.BooleanField("actif", default=True)
     is_staff = models.BooleanField(
         "accès à l'admin Django",
@@ -84,8 +89,3 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     @property
     def est_livreur(self):
         return self.role == self.Role.LIVREUR
-
-
-from django.db import models
-
-# Create your models here.

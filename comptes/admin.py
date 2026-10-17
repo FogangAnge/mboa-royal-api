@@ -6,15 +6,17 @@ from .models import Utilisateur
 
 @admin.register(Utilisateur)
 class UtilisateurAdmin(UserAdmin):
-    list_display = ("telephone", "nom", "role", "est_bloque", "is_active", "date_inscription")
-    list_filter = ("role", "est_bloque", "is_active", "langue")
+    list_display = (
+        "telephone", "nom", "role", "disponible", "est_bloque", "is_active", "date_inscription",
+    )
+    list_filter = ("role", "disponible", "est_bloque", "is_active", "langue")
     search_fields = ("telephone", "nom", "email")
     ordering = ("-date_inscription",)
 
     fieldsets = (
         (None, {"fields": ("telephone", "password")}),
         ("Informations", {"fields": ("nom", "email", "langue")}),
-        ("Rôle et statut", {"fields": ("role", "est_bloque", "is_active")}),
+        ("Rôle et statut", {"fields": ("role", "disponible", "est_bloque", "is_active")}),
         (
             "Accès à l'admin Django",
             {"fields": ("is_staff", "is_superuser", "groups", "user_permissions")},
@@ -31,8 +33,3 @@ class UtilisateurAdmin(UserAdmin):
             },
         ),
     )
-
-
-from django.contrib import admin
-
-# Register your models here.

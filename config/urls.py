@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/zones/", include("zones.urls")),
     path("api/menu/", include("menu.urls")),
     path("api/commandes/", include("commandes.urls")),
+    path("api/livraisons/", include("livraisons.urls")),
 ]
 
 if settings.DEBUG:
