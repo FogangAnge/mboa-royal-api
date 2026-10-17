@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "comptes",
     "restaurants",
+    "zones",
 ]
 AUTH_USER_MODEL = "comptes.Utilisateur"
 
