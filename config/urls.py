@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/menu/", include("menu.urls")),
     path("api/commandes/", include("commandes.urls")),
     path("api/livraisons/", include("livraisons.urls")),
+    path("api/reservations/", include("reservations.urls")),
 ]
 
 if settings.DEBUG:

@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "menu",
     "commandes",
     "livraisons",
+    "reservations",
 ]
 
 AUTH_USER_MODEL = "comptes.Utilisateur"
@@ -110,6 +111,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "commande": "10/hour",
         "suivi": "60/hour",
+        "reservation": "10/hour",
     },
 }
 
