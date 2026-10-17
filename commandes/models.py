@@ -13,6 +13,13 @@ def generer_code_livraison():
     return f"{secrets.randbelow(10000):04d}"
 
 
+MAX_TENTATIVES_CODE = 5
+
+
+class TransitionInvalide(Exception):
+    """Levée quand un changement de statut n'est pas permis."""
+
+
 class Commande(models.Model):
     class Mode(models.TextChoices):
         LIVRAISON = "livraison", "Livraison"
@@ -79,6 +86,10 @@ class Commande(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="livraisons", verbose_name="livreur", limit_choices_to={"role": "livreur"},
     )
+    tentatives_code = models.PositiveSmallIntegerField("essais de code ratés", default=0)
+    montant_encaisse = models.PositiveIntegerField(
+        "montant encaissé par le livreur", null=True, blank=True
+    )
 
     date_creation = models.DateTimeField("passée le", auto_now_add=True)
     date_modification = models.DateTimeField("modifiée le", auto_now=True)
@@ -98,6 +109,51 @@ class Commande(models.Model):
             initiales = "".join(mot[0] for mot in self.restaurant.nom.split()[:2]).upper()
             self.numero = f"{initiales}-{self.pk:04d}"
             super().save(update_fields=["numero"])
+
+    def changer_statut(self, nouveau, auteur=None, commentaire="", code=None,
+                       montant_encaisse=None, mode_paiement=None):
+        """Fait avancer la commande en respectant les règles, et l'inscrit dans l'historique."""
+        if nouveau not in TRANSITIONS.get(self.statut, set()):
+            raise TransitionInvalide(
+                f"Impossible de passer de « {self.get_statut_display()} » "
+                f"à « {Commande.Statut(nouveau).label} »."
+            )
+
+        if nouveau == Commande.Statut.EN_LIVRAISON:
+            if self.mode != Commande.Mode.LIVRAISON:
+                raise TransitionInvalide("Une commande à emporter ne part pas en livraison.")
+            if self.livreur_id is None:
+                raise TransitionInvalide("Assignez d'abord un livreur à cette commande.")
+
+        if nouveau == Commande.Statut.LIVREE:
+            if self.mode == Commande.Mode.LIVRAISON and self.statut != Commande.Statut.EN_LIVRAISON:
+                raise TransitionInvalide("La commande doit d'abord partir en livraison.")
+            self._verifier_code(code)
+            if montant_encaisse is not None:
+                self.montant_encaisse = montant_encaisse
+                self.est_payee = True
+                if mode_paiement:
+                    self.mode_paiement = mode_paiement
+
+        self.statut = nouveau
+        self.save(update_fields=[
+            "statut", "tentatives_code", "montant_encaisse", "est_payee",
+            "mode_paiement", "date_modification",
+        ])
+        HistoriqueStatut.objects.create(
+            commande=self, statut=nouveau, auteur=auteur, commentaire=commentaire
+        )
+
+    def _verifier_code(self, code):
+        if self.tentatives_code >= MAX_TENTATIVES_CODE:
+            raise TransitionInvalide(
+                "Trop d'essais de code incorrects. Contactez le restaurant pour débloquer la commande."
+            )
+        if (code or "").strip() != self.code_livraison:
+            self.tentatives_code += 1
+            self.save(update_fields=["tentatives_code"])
+            restants = MAX_TENTATIVES_CODE - self.tentatives_code
+            raise TransitionInvalide(f"Code de livraison incorrect. Essais restants : {restants}.")
 
 
 class LigneCommande(models.Model):
@@ -142,3 +198,14 @@ class HistoriqueStatut(models.Model):
 
     def __str__(self):
         return f"{self.commande} → {self.get_statut_display()}"
+
+
+TRANSITIONS = {
+    Commande.Statut.EN_ATTENTE: {Commande.Statut.CONFIRMEE, Commande.Statut.ANNULEE},
+    Commande.Statut.CONFIRMEE: {Commande.Statut.EN_PREPARATION, Commande.Statut.ANNULEE},
+    Commande.Statut.EN_PREPARATION: {Commande.Statut.PRETE, Commande.Statut.ANNULEE},
+    Commande.Statut.PRETE: {
+        Commande.Statut.EN_LIVRAISON, Commande.Statut.LIVREE, Commande.Statut.ANNULEE,
+    },
+    Commande.Statut.EN_LIVRAISON: {Commande.Statut.LIVREE},
+}

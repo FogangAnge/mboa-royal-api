@@ -250,7 +250,7 @@ class CommandeSerializer(serializers.ModelSerializer):
             "nom_client", "telephone_client", "quartier", "ville", "repere",
             "heure_souhaitee", "note", "lignes",
             "sous_total", "frais_livraison", "total",
-            "mode_paiement", "est_payee", "livreur_nom", "code_livraison",
+            "mode_paiement", "est_payee", "montant_encaisse", "livreur_nom", "code_livraison",
             "historique", "date_creation",
         )
 
@@ -259,4 +259,48 @@ class CommandeSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         if user.is_authenticated and obj.client_id == user.id:
             return obj.code_livraison
+        return None
+
+
+# ---------- Actions sur une commande ----------
+
+class ChangementStatutSerializer(serializers.Serializer):
+    statut = serializers.ChoiceField(choices=Commande.Statut.choices)
+    commentaire = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    code = serializers.CharField(required=False, allow_blank=True, max_length=4)
+    montant_encaisse = serializers.IntegerField(required=False, min_value=0)
+    mode_paiement = serializers.ChoiceField(
+        choices=[Commande.ModePaiement.ESPECES, Commande.ModePaiement.MOBILE_MONEY], required=False
+    )
+
+
+class AssignationSerializer(serializers.Serializer):
+    livreur = serializers.PrimaryKeyRelatedField(
+        queryset=Utilisateur.objects.filter(role=Utilisateur.Role.LIVREUR, is_active=True)
+    )
+
+
+class PaiementSerializer(serializers.Serializer):
+    mode_paiement = serializers.ChoiceField(choices=Commande.ModePaiement.choices)
+    est_payee = serializers.BooleanField()
+
+
+class SuiviSerializer(serializers.ModelSerializer):
+    """Ce qu'un visiteur voit en suivant sa commande : jamais le code."""
+
+    statut_libelle = serializers.CharField(source="get_statut_display", read_only=True)
+    lignes = LigneCommandeSerializer(many=True, read_only=True)
+    historique = HistoriqueStatutSerializer(many=True, read_only=True)
+    livreur = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Commande
+        fields = (
+            "numero", "statut", "statut_libelle", "mode", "quartier", "ville",
+            "heure_souhaitee", "lignes", "total", "livreur", "historique", "date_creation",
+        )
+
+    def get_livreur(self, obj):
+        if obj.statut == Commande.Statut.EN_LIVRAISON and obj.livreur:
+            return {"nom": obj.livreur.nom, "telephone": obj.livreur.telephone}
         return None

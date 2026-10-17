@@ -149,6 +149,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_THROTTLE_RATES": {
+        "commande": "10/hour",
+        "suivi": "60/hour",
+    },
 }
 
 SIMPLE_JWT = {
