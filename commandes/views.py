@@ -21,6 +21,12 @@ from .serializers import (
 )
 from .whatsapp import lien_whatsapp
 
+STATUTS_CUISINE = (
+    Commande.Statut.CONFIRMEE,
+    Commande.Statut.EN_PREPARATION,
+    Commande.Statut.PRETE,
+)
+
 
 class CommandeViewSet(
     mixins.CreateModelMixin,
@@ -67,6 +73,9 @@ class CommandeViewSet(
         if user.est_personnel:
             statut = self.request.query_params.get("statut")
             return commandes.filter(statut=statut) if statut else commandes
+        if user.est_cuisinier:
+            # L'écran cuisine n'a besoin que des commandes à préparer ou qui attendent d'être remises.
+            return commandes.filter(statut__in=STATUTS_CUISINE)
         if user.est_livreur:
             return commandes.filter(livreur=user)
         return commandes.filter(client=user)
@@ -110,6 +119,12 @@ class CommandeViewSet(
 
     def _verifier_droit_statut(self, user, commande, nouveau):
         if user.est_personnel:
+            return
+        if user.est_cuisinier:
+            if nouveau not in (Commande.Statut.EN_PREPARATION, Commande.Statut.PRETE):
+                raise PermissionDenied(
+                    "Un cuisinier peut seulement lancer la préparation ou annoncer qu'une commande est prête."
+                )
             return
         if user.est_livreur:
             if nouveau not in (Commande.Statut.EN_LIVRAISON, Commande.Statut.LIVREE):

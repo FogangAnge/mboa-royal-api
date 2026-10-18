@@ -33,11 +33,12 @@ class UtilisateurManager(BaseUserManager):
 
 
 class Utilisateur(AbstractBaseUser, PermissionsMixin):
-    """Un compte de la plateforme : propriétaire, gérant, livreur ou client."""
+    """Un compte de la plateforme : propriétaire, gérant, cuisinier, livreur ou client."""
 
     class Role(models.TextChoices):
         PROPRIETAIRE = "proprietaire", "Propriétaire"
         GERANT = "gerant", "Gérant"
+        CUISINIER = "cuisinier", "Cuisinier"
         LIVREUR = "livreur", "Livreur"
         CLIENT = "client", "Client"
 
@@ -89,3 +90,8 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     @property
     def est_livreur(self):
         return self.role == self.Role.LIVREUR
+
+    @property
+    def est_cuisinier(self):
+        """Le cuisinier voit l'écran cuisine : il lance les préparations et annonce les plats prêts."""
+        return self.role == self.Role.CUISINIER
